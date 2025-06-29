@@ -97,8 +97,18 @@ export const osReducer = (state: OsState, action: Action): OsState => {
       };
     }
     case 'FOCUS_WINDOW': {
+        if (!action.payload.id) {
+            return { ...state, activeWindowId: null };
+        }
+
         const windowToFocus = state.windows.find(win => win.id === action.payload.id);
         if (!windowToFocus) return state;
+
+        // If it's already the active window and has the highest z-index, do nothing.
+        const maxZIndex = Math.max(0, ...state.windows.map(w => w.zIndex));
+        if (state.activeWindowId === action.payload.id && windowToFocus.zIndex === maxZIndex) {
+            return state;
+        }
 
         return {
             ...state,

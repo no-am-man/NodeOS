@@ -67,6 +67,32 @@ describe('OS Reducer (State Logic Test)', () => {
         expect(focusedState.nextZIndex).toBe(state.nextZIndex + 1);
     });
 
+    it('should handle FOCUS_WINDOW with an empty ID to blur windows', () => {
+        let state = osReducer(initialState, { type: 'LAUNCH_APP', payload: welcomeApp }); // active window exists
+        
+        const focusDesktopAction: Action = { type: 'FOCUS_WINDOW', payload: { id: '' } };
+        const finalState = osReducer(state, focusDesktopAction);
+    
+        expect(finalState.activeWindowId).toBe(null);
+        // Ensure windows and zIndex are not changed
+        expect(finalState.windows).toEqual(state.windows);
+        expect(finalState.nextZIndex).toEqual(state.nextZIndex);
+    });
+
+    it('should not change z-index if focused window is already active and on top', () => {
+        let state = osReducer(initialState, { type: 'LAUNCH_APP', payload: welcomeApp });
+        const activeWindowId = state.activeWindowId;
+        const initialZIndex = state.windows[0].zIndex;
+        const initialNextZIndex = state.nextZIndex;
+    
+        const focusAction: Action = { type: 'FOCUS_WINDOW', payload: { id: activeWindowId! } };
+        const focusedState = osReducer(state, focusAction);
+    
+        expect(focusedState.activeWindowId).toBe(activeWindowId);
+        expect(focusedState.windows[0].zIndex).toBe(initialZIndex);
+        expect(focusedState.nextZIndex).toBe(initialNextZIndex);
+    });
+
     it('should handle MINIMIZE_WINDOW', () => {
         let state = osReducer(initialState, { type: 'LAUNCH_APP', payload: welcomeApp });
         const windowToMinimizeId = state.windows[0].id;
