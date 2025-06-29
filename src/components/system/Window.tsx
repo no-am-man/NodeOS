@@ -27,18 +27,27 @@ export default function Window({ win, children }: WindowProps) {
   const { dispatch } = useOs();
   const App = findApp(win.appId);
   const headerRef = useRef<HTMLDivElement>(null);
+  
+  // Drag/Resize state refs
   const isDragging = useRef(false);
   const activeResizeHandle = useRef<string | null>(null);
   const dragStartPos = useRef({ x: 0, y: 0 });
   const initialWindowRect = useRef({ x: 0, y: 0, width: 0, height: 0 });
 
+  // Live geometry state for display
   const [position, setPosition] = useState(win.position);
   const [size, setSize] = useState(win.size);
+  
+  // Refs to hold the latest geometry for mouseUp dispatch, avoiding stale state in closure
+  const positionRef = useRef(win.position);
+  const sizeRef = useRef(win.size);
 
   useEffect(() => {
     if (!win.isMaximized) {
         setPosition(win.position);
-        setSize(win.size)
+        setSize(win.size);
+        positionRef.current = win.position;
+        sizeRef.current = win.size;
     }
   }, [win.isMaximized, win.position, win.size]);
 
@@ -73,7 +82,9 @@ export default function Window({ win, children }: WindowProps) {
     if (isDragging.current) {
         const newX = e.clientX - dragStartPos.current.x;
         const newY = e.clientY - dragStartPos.current.y;
-        setPosition({ x: newX, y: newY });
+        const newPos = { x: newX, y: newY };
+        setPosition(newPos);
+        positionRef.current = newPos;
         return;
     }
     
@@ -113,17 +124,21 @@ export default function Window({ win, children }: WindowProps) {
             height = minHeight;
         }
         
-        setPosition({ x, y });
-        setSize({ width, height });
+        const newPos = { x, y };
+        const newSize = { width, height };
+
+        setPosition(newPos);
+        setSize(newSize);
+        positionRef.current = newPos;
+        sizeRef.current = newSize;
     }
   };
 
   const handleMouseUp = () => {
     if (isDragging.current) {
-        dispatch({ type: 'UPDATE_WINDOW_POSITION', payload: { id: win.id, position } });
-    }
-    if (activeResizeHandle.current) {
-        dispatch({ type: 'UPDATE_WINDOW_GEOMETRY', payload: { id: win.id, position, size } });
+        dispatch({ type: 'UPDATE_WINDOW_POSITION', payload: { id: win.id, position: positionRef.current } });
+    } else if (activeResizeHandle.current) {
+        dispatch({ type: 'UPDATE_WINDOW_GEOMETRY', payload: { id: win.id, position: positionRef.current, size: sizeRef.current } });
     }
     isDragging.current = false;
     activeResizeHandle.current = null;
