@@ -88,7 +88,7 @@ export const APPS: App[] = [
     id: 'game-2048',
     name: '2048',
     Icon: Puzzle,
-    Component: createWebApp('https://play.2048.org/'),
+    Component: createWebApp('https://www.2048.org/'),
     defaultSize: { width: 400, height: 450 },
   },
   {
