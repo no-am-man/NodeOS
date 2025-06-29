@@ -120,9 +120,9 @@ export default function Window({ win, children }: WindowProps) {
             <span className="text-sm font-medium select-none">{win.title}</span>
         </div>
         <div className="flex items-center">
-          <Button variant="ghost" size="icon" className="w-7 h-7" onClick={handleMinimize}><Minus size={14} /></Button>
-          <Button variant="ghost" size="icon" className="w-7 h-7" onClick={handleMaximize}><Square size={14} /></Button>
-          <Button variant="ghost" size="icon" className="w-7 h-7 hover:bg-destructive" onClick={handleClose}><CloseIcon size={16} /></Button>
+          <Button variant="ghost" size="icon" className="w-7 h-7" onClick={handleMinimize} aria-label="Minimize window"><Minus size={14} /></Button>
+          <Button variant="ghost" size="icon" className="w-7 h-7" onClick={handleMaximize} aria-label="Maximize window"><Square size={14} /></Button>
+          <Button variant="ghost" size="icon" className="w-7 h-7 hover:bg-destructive" onClick={handleClose} aria-label="Close window"><CloseIcon size={16} /></Button>
         </div>
       </header>
       <main className="flex-grow p-2 overflow-auto bg-card rounded-b-lg">
