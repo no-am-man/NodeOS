@@ -34,6 +34,11 @@ describe('App Registry (Utility Test)', () => {
     expect(whiteboardApp).toBeDefined();
     expect(whiteboardApp?.id).toBe('whiteboard');
     expect(whiteboardApp?.name).toBe('Whiteboard');
+
+    const codeEditorApp = findApp('code-editor');
+    expect(codeEditorApp).toBeDefined();
+    expect(codeEditorApp?.id).toBe('code-editor');
+    expect(codeEditorApp?.name).toBe('Code Editor');
   });
 
   it('findApp should return undefined for an invalid ID', () => {

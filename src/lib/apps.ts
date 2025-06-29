@@ -1,5 +1,5 @@
 import React, { type ComponentType } from 'react';
-import { Bot, Brush, Calculator, Clapperboard, Music, Puzzle, Settings, Smile, Terminal, Users } from 'lucide-react';
+import { Bot, Brush, Calculator, Clapperboard, Code, Music, Puzzle, Settings, Smile, Terminal, Users } from 'lucide-react';
 
 import dynamic from 'next/dynamic';
 
@@ -76,6 +76,13 @@ export const APPS: App[] = [
     Icon: Terminal,
     Component: TerminalApp,
     defaultSize: { width: 640, height: 380 },
+  },
+  {
+    id: 'code-editor',
+    name: 'Code Editor',
+    Icon: Code,
+    Component: createWebApp('https://stackblitz.com/edit/node?embed=1&file=index.js'),
+    defaultSize: { width: 1024, height: 768 },
   },
   {
     id: 'whiteboard',
