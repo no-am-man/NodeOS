@@ -8,7 +8,7 @@ export default function Welcome() {
                 This is a simulated operating system running entirely in your browser.
             </p>
             <p className="mt-4 text-sm">
-                Launch applications from the menu, move windows, and explore what's possible.
+                Launch applications from the menu, move windows, and explore what&apos;s possible.
             </p>
         </div>
     )
