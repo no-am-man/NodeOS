@@ -1,5 +1,5 @@
 import React, { type ComponentType } from 'react';
-import { Bot, Brush, Calculator, Settings, Smile, Terminal } from 'lucide-react';
+import { Bot, Brush, Calculator, Gamepad2, Settings, Smile, Terminal } from 'lucide-react';
 
 import dynamic from 'next/dynamic';
 
@@ -75,6 +75,13 @@ export const APPS: App[] = [
     Icon: Brush,
     Component: createWebApp('https://www.tldraw.com/'),
     defaultSize: { width: 1024, height: 768 },
+  },
+  {
+    id: 'game-2048',
+    name: '2048 Game',
+    Icon: Gamepad2,
+    Component: createWebApp('https://play2048.co/'),
+    defaultSize: { width: 360, height: 540 },
   },
 ];
 
