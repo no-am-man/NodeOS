@@ -4,7 +4,7 @@ import path from 'path'
 
 // https://vitest.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react() as any],
   test: {
     globals: true,
     environment: 'jsdom',

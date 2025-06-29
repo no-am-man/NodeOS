@@ -5,7 +5,7 @@ const mockPromptFn = vi.fn();
 
 // Mock the genkit module BEFORE importing the flow
 vi.mock('@/ai/genkit', async () => {
-  const actual = await vi.importActual<object>('@/ai/genkit');
+  const actual = await vi.importActual<any>('@/ai/genkit');
   return {
     ...actual,
     ai: {
