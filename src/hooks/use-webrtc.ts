@@ -43,6 +43,7 @@ export const useWebRTC = (roomId: string) => {
 
     if (userRef.current) {
       remove(userRef.current);
+      off(userRef.current);
     }
     off(roomRef.current);
   }, [localStream]);
