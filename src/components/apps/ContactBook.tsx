@@ -1,13 +1,16 @@
+
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Video, VideoOff, PhoneOff, Users } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, PhoneOff, Users } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { useWebRTC } from '@/hooks/use-webrtc';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 const contacts = [
   { id: 1, name: 'Alice', avatar: 'A', online: true },
@@ -20,6 +23,8 @@ const ROOM_ID = "global-video-room"; // Single room for simplicity
 
 export default function ContactBook() {
   const [inCall, setInCall] = useState(false);
+  const [isCameraOn, setIsCameraOn] = useState(true);
+  const [isMicOn, setIsMicOn] = useState(true);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
@@ -45,7 +50,28 @@ export default function ContactBook() {
   const handleLeaveCall = useCallback(() => {
     leaveRoom();
     setInCall(false);
+    setIsCameraOn(true);
+    setIsMicOn(true);
   }, [leaveRoom]);
+
+  const handleToggleCamera = useCallback(() => {
+    if (localStream) {
+      localStream.getVideoTracks().forEach(track => {
+        track.enabled = !isCameraOn;
+      });
+      setIsCameraOn(!isCameraOn);
+    }
+  }, [localStream, isCameraOn]);
+
+  const handleToggleMic = useCallback(() => {
+    if (localStream) {
+      localStream.getAudioTracks().forEach(track => {
+        track.enabled = !isMicOn;
+      });
+      setIsMicOn(!isMicOn);
+    }
+  }, [localStream, isMicOn]);
+
 
   useEffect(() => {
     if (localStream && localVideoRef.current) {
@@ -92,9 +118,15 @@ export default function ContactBook() {
         <div className="flex flex-col h-full bg-black text-white p-4 gap-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-grow">
             {/* Local Video */}
-            <div className="relative bg-muted/20 rounded-lg overflow-hidden">
-                <video ref={localVideoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
-                <p className="absolute bottom-2 left-2 text-sm bg-black/50 px-2 py-1 rounded">You</p>
+            <div className="relative bg-muted/20 rounded-lg overflow-hidden flex items-center justify-center">
+              <video ref={localVideoRef} className={cn("w-full h-full object-cover", !isCameraOn && "invisible")} autoPlay muted playsInline />
+              {!isCameraOn && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black">
+                      <VideoOff className="h-16 w-16 text-muted-foreground" />
+                      <p className="mt-4 text-lg">Camera is off</p>
+                  </div>
+              )}
+              <p className="absolute bottom-2 left-2 text-sm bg-black/50 px-2 py-1 rounded z-10">You</p>
             </div>
             {/* Remote Videos */}
             {Object.entries(remoteStreams).map(([peerId, stream]) => (
@@ -119,9 +151,62 @@ export default function ContactBook() {
             </Alert>
           )}
           <div className="flex justify-center">
-            <Button variant="destructive" size="lg" className="rounded-full" onClick={handleLeaveCall}>
-              <PhoneOff className="mr-2 h-5 w-5" /> Leave Call
-            </Button>
+            <TooltipProvider>
+                <div className="flex justify-center items-center gap-4 p-2 bg-black/50 rounded-full">
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant={isMicOn ? 'secondary' : 'destructive'}
+                                size="icon"
+                                className="rounded-full w-14 h-14"
+                                onClick={handleToggleMic}
+                                aria-label={isMicOn ? 'Mute microphone' : 'Unmute microphone'}
+                            >
+                                {isMicOn ? <Mic className="h-6 w-6" /> : <MicOff className="h-6 w-6" />}
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{isMicOn ? 'Mute microphone' : 'Unmute microphone'}</p>
+                        </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant={isCameraOn ? 'secondary' : 'destructive'}
+                                size="icon"
+                                className="rounded-full w-14 h-14"
+                                onClick={handleToggleCamera}
+                                aria-label={isCameraOn ? 'Turn off camera' : 'Turn on camera'}
+                            >
+                                {isCameraOn ? <Video className="h-6 w-6" /> : <VideoOff className="h-6 w-6" />}
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{isCameraOn ? 'Turn off camera' : 'Turn on camera'}</p>
+                        </TooltipContent>
+                    </Tooltip>
+
+                    <div className="w-px h-8 bg-gray-600 mx-2"></div>
+
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button 
+                                variant="destructive" 
+                                size="icon" 
+                                className="rounded-full w-14 h-14" 
+                                onClick={handleLeaveCall}
+                                aria-label="Leave Call"
+                            >
+                                <PhoneOff className="h-6 w-6" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Leave Call</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </div>
+            </TooltipProvider>
           </div>
         </div>
       )}
