@@ -16,7 +16,7 @@ const createWebApp = (url: string, sandboxOptions: string = "allow-scripts allow
         return React.createElement('iframe', {
             src: url,
             sandbox: sandboxOptions,
-            className: "w-full h-full border-0 bg-white",
+            className: "w-full h-full border-0 bg-transparent",
             title: "Web App"
         });
     };
