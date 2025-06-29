@@ -16,7 +16,11 @@ export default function AppLauncher() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" className="w-10 h-10 p-0 rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
+        <Button
+          variant="ghost"
+          aria-label="Launch applications"
+          className="w-10 h-10 p-0 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+        >
             <Power />
         </Button>
       </PopoverTrigger>

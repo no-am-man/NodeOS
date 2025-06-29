@@ -128,7 +128,7 @@ interface OsContextType {
   setTheme: (theme: string) => void;
 }
 
-const OsContext = createContext<OsContextType | undefined>(undefined);
+export const OsContext = createContext<OsContextType | undefined>(undefined);
 
 export const OsProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(osReducer, initialState);
