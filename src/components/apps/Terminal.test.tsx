@@ -77,7 +77,7 @@ describe('Terminal Component (UI Test)', () => {
         expect(input).toHaveValue('');
     });
 
-    it('should process the "ps" command and list open windows', async () => {
+    it('should process the "ps" command and list open windows with proper formatting', async () => {
         const welcomeApp = APPS.find(app => app.id === 'welcome')!;
         const settingsApp = APPS.find(app => app.id === 'settings')!;
         const windows: WindowState[] = [
@@ -92,10 +92,16 @@ describe('Terminal Component (UI Test)', () => {
         fireEvent.change(input, { target: { value: 'ps' } });
         fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' });
 
-        // Use regex for more flexible matching of whitespace
-        expect(await screen.findByText(/PID\s+APP\s+TITLE/i)).toBeInTheDocument();
-        expect(await screen.findByText(/win-123\s+welcome\s+Welcome/i)).toBeInTheDocument();
-        expect(await screen.findByText(/win-456\s+settings\s+System Settings/i)).toBeInTheDocument();
+        const outputElement = await screen.findByText((content, element) => {
+            return element?.tagName.toLowerCase() === 'p' && content.startsWith('PID');
+        });
+
+        const expectedHeader = 'PID'.padEnd(25) + 'APP'.padEnd(15) + 'TITLE';
+        const expectedP1 = 'win-123'.padEnd(25) + 'welcome'.padEnd(15) + 'Welcome';
+        const expectedP2 = 'win-456'.padEnd(25) + 'settings'.padEnd(15) + 'System Settings';
+        const expectedFullOutput = `${expectedHeader}\n${expectedP1}\n${expectedP2}`;
+
+        expect(outputElement.textContent).toBe(expectedFullOutput);
     });
 
     it('should handle unknown commands', async () => {

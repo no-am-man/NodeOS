@@ -52,10 +52,13 @@ export default function Terminal() {
             case 'echo':
                 return { type: 'output', text: args.join(' ') };
             case 'ps': {
-                const header = 'PID\t\tAPP\t\tTITLE';
+                const header = 'PID'.padEnd(25) + 'APP'.padEnd(15) + 'TITLE';
                 const processes = osState.windows.map(win => {
                     const app = findApp(win.appId);
-                    return `${win.id}\t${app?.id}\t\t${win.title}`;
+                    const pid = win.id.padEnd(25);
+                    const appId = (app?.id || 'unknown').padEnd(15);
+                    const title = win.title;
+                    return `${pid}${appId}${title}`;
                 }).join('\n');
                 return { type: 'output', text: `${header}\n${processes}`};
             }
