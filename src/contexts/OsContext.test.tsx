@@ -5,6 +5,7 @@ import { APPS } from '@/lib/apps';
 describe('OS Reducer (State Logic Test)', () => {
     const welcomeApp = APPS.find(app => app.id === 'welcome')!;
     const settingsApp = APPS.find(app => app.id === 'settings')!;
+    const calculatorApp = APPS.find(app => app.id === 'calculator')!;
 
     it('should return the initial state for an unknown action', () => {
         const unknownAction = { type: 'UNKNOWN_ACTION' } as unknown as Action;
@@ -39,7 +40,7 @@ describe('OS Reducer (State Logic Test)', () => {
         expect(relaunchedState.activeWindowId).toBe(windowId);
     });
 
-    it('should handle CLOSE_WINDOW', () => {
+    it('should handle CLOSE_WINDOW and remove the window', () => {
         const launchAction: Action = { type: 'LAUNCH_APP', payload: welcomeApp };
         const launchedState = osReducer(initialState, launchAction);
         const windowIdToClose = launchedState.windows[0].id;
@@ -49,6 +50,26 @@ describe('OS Reducer (State Logic Test)', () => {
 
         expect(finalState.windows.length).toBe(0);
         expect(finalState.activeWindowId).toBe(null);
+    });
+
+    it('should handle CLOSE_WINDOW and focus the next window', () => {
+        // Launch 3 windows: Welcome (100), Settings (101), Calculator (102)
+        let state = osReducer(initialState, { type: 'LAUNCH_APP', payload: welcomeApp });
+        const settingsState = osReducer(state, { type: 'LAUNCH_APP', payload: settingsApp });
+        const calcState = osReducer(settingsState, { type: 'LAUNCH_APP', payload: calculatorApp });
+        
+        const settingsWindowId = settingsState.windows.find(w => w.appId === 'settings')!.id;
+        const calcWindowId = calcState.windows.find(w => w.appId === 'calculator')!.id;
+        
+        expect(calcState.activeWindowId).toBe(calcWindowId); // Calculator is active
+
+        // Close the active window (Calculator)
+        const closeAction: Action = { type: 'CLOSE_WINDOW', payload: { id: calcWindowId } };
+        const finalState = osReducer(calcState, closeAction);
+
+        // Check that Settings window is now active
+        expect(finalState.windows.length).toBe(2);
+        expect(finalState.activeWindowId).toBe(settingsWindowId);
     });
 
     it('should handle FOCUS_WINDOW', () => {

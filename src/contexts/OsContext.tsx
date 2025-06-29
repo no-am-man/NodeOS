@@ -1,3 +1,4 @@
+
 "use client";
 
 import { createContext, useContext, useReducer, type Dispatch, type ReactNode, useEffect, useRef } from 'react';
@@ -99,10 +100,23 @@ export const osReducer = (state: OsState, action: Action): OsState => {
     }
     case 'CLOSE_WINDOW': {
       const newWindows = state.windows.filter(win => win.id !== action.payload.id);
+      let newActiveWindowId = state.activeWindowId;
+
+      if (state.activeWindowId === action.payload.id) {
+        if (newWindows.length > 0) {
+          // Find the window with the highest z-index among the remaining ones
+          newActiveWindowId = newWindows.reduce((prev, current) => 
+            (prev.zIndex > current.zIndex) ? prev : current
+          ).id;
+        } else {
+          newActiveWindowId = null;
+        }
+      }
+
       return {
         ...state,
         windows: newWindows,
-        activeWindowId: state.activeWindowId === action.payload.id ? null : state.activeWindowId,
+        activeWindowId: newActiveWindowId,
       };
     }
     case 'FOCUS_WINDOW': {
