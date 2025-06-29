@@ -1,8 +1,12 @@
 "use client";
 
-import { createContext, useContext, useReducer, type Dispatch, type ReactNode, useEffect } from 'react';
-import { APPS, type App } from '@/lib/apps';
+import { createContext, useContext, useReducer, type Dispatch, type ReactNode, useEffect, useRef } from 'react';
 import { useTheme } from 'next-themes';
+import { ref, set, get } from 'firebase/database';
+
+import { APPS, type App } from '@/lib/apps';
+import { database } from '@/lib/firebase';
+
 
 export interface WindowState {
   id: string;
@@ -28,7 +32,8 @@ export type Action =
   | { type: 'MINIMIZE_WINDOW'; payload: { id: string } }
   | { type: 'TOGGLE_MAXIMIZE_WINDOW'; payload: { id: string } }
   | { type: 'UPDATE_WINDOW_POSITION'; payload: { id: string; position: { x: number; y: number } } }
-  | { type: 'UPDATE_WINDOW_SIZE'; payload: { id: string; size: { width: number; height: number } } };
+  | { type: 'UPDATE_WINDOW_SIZE'; payload: { id: string; size: { width: number; height: number } } }
+  | { type: 'HYDRATE_WINDOWS'; payload: { windows: WindowState[] } };
 
 export const initialState: OsState = {
   windows: [],
@@ -38,8 +43,23 @@ export const initialState: OsState = {
 
 export const osReducer = (state: OsState, action: Action): OsState => {
   switch (action.type) {
+    case 'HYDRATE_WINDOWS': {
+      const { windows } = action.payload;
+      if (!windows || windows.length === 0) {
+        return state;
+      }
+      const maxZIndex = Math.max(...windows.map(w => w.zIndex), 99);
+      return {
+        ...state,
+        windows,
+        nextZIndex: maxZIndex + 1,
+        activeWindowId: null,
+      };
+    }
     case 'LAUNCH_APP': {
-      const existingWindow = state.windows.find(win => win.appId === action.payload.id && !win.isMinimized);
+      const existingWindow = state.windows.find(win => win.appId === action.payload.id);
+      
+      // If window exists, bring it to front and un-minimize it.
       if (existingWindow) {
         return {
             ...state,
@@ -68,20 +88,25 @@ export const osReducer = (state: OsState, action: Action): OsState => {
         nextZIndex: state.nextZIndex + 1,
       };
     }
-    case 'CLOSE_WINDOW':
+    case 'CLOSE_WINDOW': {
+      const newWindows = state.windows.filter(win => win.id !== action.payload.id);
       return {
         ...state,
-        windows: state.windows.filter(win => win.id !== action.payload.id),
+        windows: newWindows,
+        activeWindowId: state.activeWindowId === action.payload.id ? null : state.activeWindowId,
       };
+    }
     case 'FOCUS_WINDOW': {
-        const isMinimized = state.windows.find(win => win.id === action.payload.id)?.isMinimized;
+        const windowToFocus = state.windows.find(win => win.id === action.payload.id);
+        if (!windowToFocus) return state;
+
         return {
             ...state,
             windows: state.windows.map(win =>
-            win.id === action.payload.id ? { ...win, zIndex: state.nextZIndex, isMinimized: false } : win
+              win.id === action.payload.id ? { ...win, zIndex: state.nextZIndex, isMinimized: false } : win
             ),
-            activeWindowId: isMinimized ? state.activeWindowId : action.payload.id,
-            nextZIndex: isMinimized ? state.nextZIndex : state.nextZIndex + 1,
+            activeWindowId: action.payload.id,
+            nextZIndex: state.nextZIndex + 1,
         };
     }
     case 'MINIMIZE_WINDOW':
@@ -133,12 +158,44 @@ export const OsContext = createContext<OsContextType | undefined>(undefined);
 export const OsProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(osReducer, initialState);
   const { theme, setTheme } = useTheme();
+  const dataLoaded = useRef(false);
 
+  // Load from DB on mount
   useEffect(() => {
-    APPS.filter(app => app.isDefault).forEach(app => {
-        dispatch({ type: 'LAUNCH_APP', payload: app });
+    const windowsRef = ref(database, 'windows');
+    get(windowsRef).then((snapshot) => {
+      if (snapshot.exists()) {
+        const windowsFromDb = snapshot.val();
+        if (Array.isArray(windowsFromDb) && windowsFromDb.length > 0) {
+          dispatch({ type: 'HYDRATE_WINDOWS', payload: { windows: windowsFromDb } });
+        } else {
+           // Data is empty/invalid, launch default
+           APPS.filter(app => app.isDefault).forEach(app => {
+                dispatch({ type: 'LAUNCH_APP', payload: app });
+            });
+        }
+      } else {
+        // No data, launch default
+        APPS.filter(app => app.isDefault).forEach(app => {
+            dispatch({ type: 'LAUNCH_APP', payload: app });
+        });
+      }
+    }).finally(() => {
+      dataLoaded.current = true;
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Save to DB on change
+  useEffect(() => {
+    if (!dataLoaded.current) {
+      return;
+    }
+    const windowsRef = ref(database, 'windows');
+    // Using set with null removes the data from Firebase
+    set(windowsRef, state.windows.length > 0 ? state.windows : null);
+  }, [state.windows]);
+
 
   const launchApp = (app: App) => {
     dispatch({ type: 'LAUNCH_APP', payload: app });
