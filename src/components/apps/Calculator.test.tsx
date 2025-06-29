@@ -145,4 +145,17 @@ describe('Calculator Component (UI Test)', () => {
     const display = screen.getByTestId('calculator-display');
     expect(display).toHaveTextContent('3'); // 5 - 2 = 3
   });
+
+  it('should continue calculation from result after pressing equals then an operator', () => {
+    render(<Calculator />);
+    fireEvent.click(screen.getByText('2'));
+    fireEvent.click(screen.getByText('×'));
+    fireEvent.click(screen.getByText('3'));
+    fireEvent.click(screen.getByText('=')); // 6
+    fireEvent.click(screen.getByText('+')); // use 6 as first operand
+    fireEvent.click(screen.getByText('4'));
+    fireEvent.click(screen.getByText('='));
+    const display = screen.getByTestId('calculator-display');
+    expect(display).toHaveTextContent('10');
+  });
 });
