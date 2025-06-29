@@ -20,7 +20,7 @@ export default function Calculator() {
 
   const inputDecimal = () => {
     if (waitingForOperand) {
-        setDisplay('.');
+        setDisplay('0.');
         setWaitingForOperand(false);
     } else if (!display.includes('.')) {
       setDisplay(display + '.');

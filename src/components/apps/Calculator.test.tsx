@@ -96,4 +96,42 @@ describe('Calculator Component (UI Test)', () => {
     fireEvent.click(screen.getByText('='));
     expect(display).toHaveTextContent('12');
   });
+
+  it('should handle division by zero', () => {
+    render(<Calculator />);
+    fireEvent.click(screen.getByText('5'));
+    fireEvent.click(screen.getByText('÷'));
+    fireEvent.click(screen.getByText('0'));
+    fireEvent.click(screen.getByText('='));
+    const display = screen.getByTestId('calculator-display');
+    expect(display).toHaveTextContent('Infinity');
+  });
+
+  it('should start a new calculation after a result is shown', () => {
+    render(<Calculator />);
+    // First calculation: 2 * 3 = 6
+    fireEvent.click(screen.getByText('2'));
+    fireEvent.click(screen.getByText('×'));
+    fireEvent.click(screen.getByText('3'));
+    fireEvent.click(screen.getByText('='));
+    expect(screen.getByTestId('calculator-display')).toHaveTextContent('6');
+
+    // Start new calculation: 4 + 5 = 9
+    fireEvent.click(screen.getByText('4'));
+    fireEvent.click(screen.getByText('+'));
+    fireEvent.click(screen.getByText('5'));
+    fireEvent.click(screen.getByText('='));
+    expect(screen.getByTestId('calculator-display')).toHaveTextContent('9');
+  });
+  
+  it('should handle decimal input after an operator', () => {
+    render(<Calculator />);
+    fireEvent.click(screen.getByText('5'));
+    fireEvent.click(screen.getByText('+'));
+    fireEvent.click(screen.getByText('.'));
+    fireEvent.click(screen.getByText('2'));
+    fireEvent.click(screen.getByText('='));
+    const display = screen.getByTestId('calculator-display');
+    expect(display).toHaveTextContent('5.2');
+  });
 });
