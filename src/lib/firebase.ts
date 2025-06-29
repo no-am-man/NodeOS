@@ -1,5 +1,5 @@
 import { initializeApp, getApp, getApps } from "firebase/app";
-import { getDatabase } from "firebase/database";
+import { getDatabase, connectDatabaseEmulator } from "firebase/database";
 
 // Your web app's Firebase configuration should be stored in environment variables.
 // Create a .env.local file in the root of your project and add the following:
@@ -24,5 +24,10 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const database = getDatabase(app);
+
+if (process.env.NODE_ENV === "development") {
+  console.log("Development mode: Connecting to Firebase Realtime Database emulator.");
+  connectDatabaseEmulator(database, "localhost", 9000);
+}
 
 export { app, database };
