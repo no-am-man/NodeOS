@@ -16,3 +16,6 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: vi.fn(),
   })),
 });
+
+// Mock focus for JSDOM
+window.HTMLElement.prototype.focus = vi.fn();

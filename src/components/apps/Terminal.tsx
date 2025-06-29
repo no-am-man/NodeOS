@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect, KeyboardEvent } from 'react';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useOs, type OsState } from '@/contexts/OsContext';
+import { findApp } from '@/lib/apps';
 
 interface Line {
     type: 'input' | 'output';
@@ -19,6 +21,7 @@ const welcomeMessage = [
 export default function Terminal() {
     const [history, setHistory] = useState<Line[]>(welcomeMessage);
     const [input, setInput] = useState('');
+    const { state } = useOs();
     const scrollAreaRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -39,15 +42,23 @@ export default function Terminal() {
         inputRef.current?.focus();
     }, []);
 
-    const processCommand = (command: string): Line => {
+    const processCommand = (command: string, osState: OsState): Line => {
         const [cmd, ...args] = command.toLowerCase().trim().split(' ');
         switch (cmd) {
             case 'help':
-                return { type: 'output', text: 'Available commands:\n  help    - Show this help message\n  date    - Display the current date and time\n  clear   - Clear the terminal screen\n  echo    - Display a line of text' };
+                return { type: 'output', text: 'Available commands:\n  help    - Show this help message\n  date    - Display the current date and time\n  clear   - Clear the terminal screen\n  echo    - Display a line of text\n  ps      - List running processes' };
             case 'date':
                 return { type: 'output', text: new Date().toLocaleString() };
             case 'echo':
                 return { type: 'output', text: args.join(' ') };
+            case 'ps': {
+                const header = 'PID\t\tAPP\t\tTITLE';
+                const processes = osState.windows.map(win => {
+                    const app = findApp(win.appId);
+                    return `${win.id}\t${app?.id}\t\t${win.title}`;
+                }).join('\n');
+                return { type: 'output', text: `${header}\n${processes}`};
+            }
             case 'clear':
                 return { type: 'output', text: '' }; // Special case handled in handleKeyDown
             default:
@@ -63,7 +74,7 @@ export default function Terminal() {
             if (command.toLowerCase() === 'clear') {
                 setHistory(welcomeMessage);
             } else {
-                const outputLine = processCommand(command);
+                const outputLine = processCommand(command, state);
                 setHistory([...newHistory, outputLine]);
             }
             setInput('');
