@@ -84,16 +84,31 @@ describe('useToast Hook (Utility Test)', () => {
         expect(result.current.toasts.length).toBe(0);
     });
 
-    it('should respect the TOAST_LIMIT of 1', () => {
+    it('should respect the TOAST_LIMIT of 3', () => {
         const { result } = renderHook(() => useToast());
 
         act(() => {
             toast({ title: 'First Toast' });
-            toast({ title: 'Second Toast' }); // This should replace the first because limit is 1
+            toast({ title: 'Second Toast' });
+            toast({ title: 'Third Toast' });
         });
 
-        expect(result.current.toasts.length).toBe(1);
-        expect(result.current.toasts[0].title).toBe('Second Toast');
+        expect(result.current.toasts.length).toBe(3);
+        expect(result.current.toasts[0].title).toBe('Third Toast');
+        expect(result.current.toasts[1].title).toBe('Second Toast');
+        expect(result.current.toasts[2].title).toBe('First Toast');
+
+        // This one should push out the first toast
+        act(() => {
+            toast({ title: 'Fourth Toast' });
+        });
+
+        expect(result.current.toasts.length).toBe(3);
+        expect(result.current.toasts[0].title).toBe('Fourth Toast');
+        expect(result.current.toasts[1].title).toBe('Third Toast');
+        expect(result.current.toasts[2].title).toBe('Second Toast');
+        // 'First Toast' should be gone.
+        expect(result.current.toasts.find(t => t.title === 'First Toast')).toBeUndefined();
     });
 
     it('should update an existing toast when its update() method is called', () => {
