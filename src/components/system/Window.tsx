@@ -44,9 +44,8 @@ export default function Window({ win, children }: WindowProps) {
 
 
   const handleDragMouseDown = (e: MouseEvent<HTMLDivElement>) => {
-    if (e.button !== 0) return;
+    if (e.button !== 0 || win.isMaximized) return;
     dispatch({ type: 'FOCUS_WINDOW', payload: { id: win.id } });
-    if(win.isMaximized) return;
 
     isDragging.current = true;
     dragStartPos.current = {
@@ -59,9 +58,8 @@ export default function Window({ win, children }: WindowProps) {
   
   const handleResizeMouseDown = (e: MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
-    if (e.button !== 0) return;
+    if (e.button !== 0 || win.isMaximized) return;
     dispatch({ type: 'FOCUS_WINDOW', payload: { id: win.id } });
-    if(win.isMaximized) return;
 
     activeResizeHandle.current = e.currentTarget.dataset.direction || null;
     dragStartPos.current = { x: e.clientX, y: e.clientY, };
@@ -76,45 +74,47 @@ export default function Window({ win, children }: WindowProps) {
         const newX = e.clientX - dragStartPos.current.x;
         const newY = e.clientY - dragStartPos.current.y;
         setPosition({ x: newX, y: newY });
+        return;
     }
+    
     if (activeResizeHandle.current) {
         const dx = e.clientX - dragStartPos.current.x;
         const dy = e.clientY - dragStartPos.current.y;
 
-        const newPosition = { ...initialWindowRect.current };
-        const newSize = { ...initialWindowRect.current };
+        let { x, y, width, height } = initialWindowRect.current;
+        const minWidth = 200;
+        const minHeight = 150;
         
-        const directions = activeResizeHandle.current.split('-');
-
-        if (directions.includes('top')) {
-            const newHeight = initialWindowRect.current.height - dy;
-            if (newHeight >= 150) {
-                newPosition.y = initialWindowRect.current.y + dy;
-                newSize.height = newHeight;
-            } else {
-                newPosition.y = initialWindowRect.current.y + initialWindowRect.current.height - 150;
-                newSize.height = 150;
-            }
+        if (activeResizeHandle.current.includes('right')) {
+            width += dx;
         }
-        if (directions.includes('bottom')) {
-            newSize.height = Math.max(150, initialWindowRect.current.height + dy);
+        if (activeResizeHandle.current.includes('bottom')) {
+            height += dy;
         }
-        if (directions.includes('left')) {
-            const newWidth = initialWindowRect.current.width - dx;
-            if (newWidth >= 200) {
-                newPosition.x = initialWindowRect.current.x + dx;
-                newSize.width = newWidth;
-            } else {
-                newPosition.x = initialWindowRect.current.x + initialWindowRect.current.width - 200;
-                newSize.width = 200;
-            }
+        if (activeResizeHandle.current.includes('left')) {
+            width -= dx;
+            x += dx;
         }
-        if (directions.includes('right')) {
-            newSize.width = Math.max(200, initialWindowRect.current.width + dx);
+        if (activeResizeHandle.current.includes('top')) {
+            height -= dy;
+            y += dy;
         }
 
-        setPosition({ x: newPosition.x, y: newPosition.y });
-        setSize({ width: newSize.width, height: newSize.height });
+        if (width < minWidth) {
+            if (activeResizeHandle.current.includes('left')) {
+                x += width - minWidth;
+            }
+            width = minWidth;
+        }
+        if (height < minHeight) {
+            if (activeResizeHandle.current.includes('top')) {
+                y += height - minHeight;
+            }
+            height = minHeight;
+        }
+        
+        setPosition({ x, y });
+        setSize({ width, height });
     }
   };
 
@@ -154,7 +154,10 @@ export default function Window({ win, children }: WindowProps) {
     >
       <header
         ref={headerRef}
-        className="flex items-center justify-between pl-3 pr-1 h-8 bg-secondary rounded-t-lg cursor-grab active:cursor-grabbing"
+        className={cn("flex items-center justify-between pl-3 pr-1 h-8 bg-secondary rounded-t-lg", {
+            "cursor-grab active:cursor-grabbing": !win.isMaximized,
+            "cursor-default": win.isMaximized,
+        })}
         onMouseDown={handleDragMouseDown}
         onDoubleClick={handleMaximize}
       >
