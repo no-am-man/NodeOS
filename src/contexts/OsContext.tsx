@@ -15,13 +15,13 @@ export interface WindowState {
   zIndex: number;
 }
 
-interface OsState {
+export interface OsState {
   windows: WindowState[];
   activeWindowId: string | null;
   nextZIndex: number;
 }
 
-type Action =
+export type Action =
   | { type: 'LAUNCH_APP'; payload: App }
   | { type: 'CLOSE_WINDOW'; payload: { id: string } }
   | { type: 'FOCUS_WINDOW'; payload: { id: string } }
@@ -30,13 +30,13 @@ type Action =
   | { type: 'UPDATE_WINDOW_POSITION'; payload: { id: string; position: { x: number; y: number } } }
   | { type: 'UPDATE_WINDOW_SIZE'; payload: { id: string; size: { width: number; height: number } } };
 
-const initialState: OsState = {
+export const initialState: OsState = {
   windows: [],
   activeWindowId: null,
   nextZIndex: 100,
 };
 
-const osReducer = (state: OsState, action: Action): OsState => {
+export const osReducer = (state: OsState, action: Action): OsState => {
   switch (action.type) {
     case 'LAUNCH_APP': {
       const existingWindow = state.windows.find(win => win.appId === action.payload.id && !win.isMinimized);
