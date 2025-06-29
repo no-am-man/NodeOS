@@ -7,6 +7,7 @@ import { findApp } from '@/lib/apps';
 import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
 import { useTheme } from 'next-themes';
+import RandomBackgroundButton from './RandomBackgroundButton';
 
 function Clock() {
     const [time, setTime] = React.useState<Date | null>(null);
@@ -72,6 +73,7 @@ export default function Taskbar() {
         </div>
       </div>
       <div className="flex items-center gap-2">
+        <RandomBackgroundButton />
         <Clock />
       </div>
     </div>

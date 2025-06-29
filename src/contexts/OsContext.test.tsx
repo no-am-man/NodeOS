@@ -161,4 +161,12 @@ describe('OS Reducer (State Logic Test)', () => {
         expect(hydratedState.nextZIndex).toBe(152);
         expect(hydratedState.activeWindowId).toBe(null);
     });
+
+    it('should handle SET_DESKTOP_BACKGROUND', () => {
+        const newUrl = 'http://example.com/new-bg.png';
+        const action: Action = { type: 'SET_DESKTOP_BACKGROUND', payload: { url: newUrl } };
+        const state = osReducer(initialState, action);
+
+        expect(state.desktopBackgroundUrl).toBe(newUrl);
+    });
 });

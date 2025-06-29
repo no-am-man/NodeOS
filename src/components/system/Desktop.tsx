@@ -12,11 +12,12 @@ export default function Desktop() {
     <div className="flex-grow w-full h-full relative" onMouseDown={() => dispatch({type: 'FOCUS_WINDOW', payload: {id: ''}})}>
       <Image
         priority
-        src="https://placehold.co/1920x1080.png"
+        key={state.desktopBackgroundUrl} 
+        src={state.desktopBackgroundUrl}
         alt="Desktop background"
         fill
         style={{ objectFit: 'cover' }}
-        className="z-0"
+        className="z-0 transition-opacity duration-500"
         data-ai-hint="abstract background"
       />
       {state.windows.map((win) => {
