@@ -1,5 +1,5 @@
 import React, { type ComponentType } from 'react';
-import { Bot, Brush, Calculator, Clapperboard, Gamepad2, Music, Settings, Smile, Terminal } from 'lucide-react';
+import { Bot, Brush, Calculator, Clapperboard, Gamepad2, Music, Settings, Smile, Terminal, Users } from 'lucide-react';
 
 import dynamic from 'next/dynamic';
 
@@ -8,6 +8,7 @@ const SettingsApp = dynamic(() => import('@/components/apps/Settings'));
 const Welcome = dynamic(() => import('@/components/apps/Welcome'));
 const CalculatorApp = dynamic(() => import('@/components/apps/Calculator'));
 const TerminalApp = dynamic(() => import('@/components/apps/Terminal'));
+const ContactBookApp = dynamic(() => import('@/components/apps/ContactBook'));
 
 // Factory function to create a web app component
 const createWebApp = (url: string, sandboxOptions: string = "allow-scripts allow-same-origin allow-forms allow-popups"): ComponentType => {
@@ -40,6 +41,13 @@ export const APPS: App[] = [
     Component: Welcome,
     defaultSize: { width: 450, height: 300 },
     isDefault: true,
+  },
+  {
+    id: 'contacts',
+    name: 'Contacts',
+    Icon: Users,
+    Component: ContactBookApp,
+    defaultSize: { width: 800, height: 600 },
   },
   {
     id: 'ai-assistant',
