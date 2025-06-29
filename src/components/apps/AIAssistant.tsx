@@ -66,7 +66,7 @@ export default function AIAssistant() {
                                         : "bg-muted"
                                 )}
                             >
-                                <p className="text-sm font-code whitespace-pre-wrap">{message.text}</p>
+                                <p className="text-sm font-body whitespace-pre-wrap">{message.text}</p>
                             </div>
                             {message.sender === 'user' && (
                                 <div className="w-8 h-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center flex-shrink-0">
@@ -99,7 +99,7 @@ export default function AIAssistant() {
                         placeholder="Type your message..."
                         onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                         disabled={isLoading}
-                        className="font-code"
+                        className="font-body"
                     />
                     <Button onClick={handleSend} disabled={isLoading}>
                         Send
