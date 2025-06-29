@@ -1,5 +1,5 @@
 import React, { type ComponentType } from 'react';
-import { Bot, Brush, Calculator, Clapperboard, Gamepad2, Music, Settings, Smile, Terminal, Users } from 'lucide-react';
+import { Bot, Brush, Calculator, Clapperboard, Code, Music, Settings, Smile, Terminal, Users } from 'lucide-react';
 
 import dynamic from 'next/dynamic';
 
@@ -85,11 +85,11 @@ export const APPS: App[] = [
     defaultSize: { width: 1024, height: 768 },
   },
   {
-    id: 'game-2048',
-    name: '2048 Game',
-    Icon: Gamepad2,
-    Component: createWebApp('https://play2048.co/'),
-    defaultSize: { width: 360, height: 540 },
+    id: 'vscode',
+    name: 'Code Editor',
+    Icon: Code,
+    Component: createWebApp('https://vscode.dev/'),
+    defaultSize: { width: 1024, height: 768 },
   },
   {
     id: 'photo-editor',
