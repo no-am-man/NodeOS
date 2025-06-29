@@ -48,7 +48,8 @@ export const useWebRTC = (roomId: string) => {
   }, [localStream]);
 
   const stopScreenShare = useCallback(async () => {
-    if (!isScreenSharing || !localVideoTrack.current || !localStream) return;
+    // The !isScreenSharing check was removed as it could be stale in the onended callback
+    if (!localVideoTrack.current || !localStream) return;
     
     // Stop the screen sharing stream
     screenShareStream.current?.getTracks().forEach(track => track.stop());
@@ -66,7 +67,7 @@ export const useWebRTC = (roomId: string) => {
     const newStream = new MediaStream([localVideoTrack.current, ...localStream.getAudioTracks()]);
     setLocalStream(newStream);
     setIsScreenSharing(false);
-  }, [isScreenSharing, localStream]);
+  }, [localStream]);
 
 
   const startScreenShare = useCallback(async () => {
