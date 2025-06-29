@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from 'react';
 import { useOs } from '@/contexts/OsContext';
 import AppLauncher from './AppLauncher';
 import { findApp } from '@/lib/apps';
