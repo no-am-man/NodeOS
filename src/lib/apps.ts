@@ -1,5 +1,5 @@
-import { type ComponentType } from 'react';
-import { Bot, Calculator, Settings, Smile, Terminal } from 'lucide-react';
+import React, { type ComponentType } from 'react';
+import { Bot, Calculator, Globe, Settings, Smile, Terminal } from 'lucide-react';
 
 import dynamic from 'next/dynamic';
 
@@ -8,6 +8,20 @@ const SettingsApp = dynamic(() => import('@/components/apps/Settings'));
 const Welcome = dynamic(() => import('@/components/apps/Welcome'));
 const CalculatorApp = dynamic(() => import('@/components/apps/Calculator'));
 const TerminalApp = dynamic(() => import('@/components/apps/Terminal'));
+
+// Factory function to create a web app component
+const createWebApp = (url: string, sandboxOptions: string = "allow-scripts allow-same-origin allow-forms allow-popups"): ComponentType => {
+    const WebAppComponent = () => {
+        return React.createElement('iframe', {
+            src: url,
+            sandbox: sandboxOptions,
+            className: "w-full h-full border-0 bg-white",
+            title: "Web App"
+        });
+    };
+    WebAppComponent.displayName = `WebApp(${url})`;
+    return WebAppComponent;
+};
 
 export interface App {
   id: string;
@@ -54,6 +68,13 @@ export const APPS: App[] = [
     Icon: Terminal,
     Component: TerminalApp,
     defaultSize: { width: 640, height: 380 },
+  },
+  {
+    id: 'canva',
+    name: 'Canva',
+    Icon: Globe,
+    Component: createWebApp('https://www.canva.com/'),
+    defaultSize: { width: 1024, height: 768 },
   },
 ];
 
