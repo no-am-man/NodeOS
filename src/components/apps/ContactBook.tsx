@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mic, MicOff, Video, VideoOff, PhoneOff, Users } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, PhoneOff, Users, ScreenShare } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { useWebRTC } from '@/hooks/use-webrtc';
@@ -28,7 +28,7 @@ export default function ContactBook() {
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
-  const { localStream, remoteStreams, joinRoom, leaveRoom } = useWebRTC(ROOM_ID);
+  const { localStream, remoteStreams, joinRoom, leaveRoom, isScreenSharing, startScreenShare, stopScreenShare } = useWebRTC(ROOM_ID);
 
   const handleJoinCall = useCallback(async () => {
     try {
@@ -55,13 +55,13 @@ export default function ContactBook() {
   }, [leaveRoom]);
 
   const handleToggleCamera = useCallback(() => {
-    if (localStream) {
+    if (localStream && !isScreenSharing) { // Can't toggle camera while screen sharing
       localStream.getVideoTracks().forEach(track => {
         track.enabled = !isCameraOn;
       });
       setIsCameraOn(!isCameraOn);
     }
-  }, [localStream, isCameraOn]);
+  }, [localStream, isCameraOn, isScreenSharing]);
 
   const handleToggleMic = useCallback(() => {
     if (localStream) {
@@ -72,12 +72,33 @@ export default function ContactBook() {
     }
   }, [localStream, isMicOn]);
 
+  const handleToggleScreenShare = useCallback(async () => {
+    try {
+      if (isScreenSharing) {
+        await stopScreenShare();
+        setIsCameraOn(true); // When we stop sharing, camera comes back on
+      } else {
+        await startScreenShare();
+        setIsCameraOn(false); // Can't have camera on while sharing
+      }
+    } catch (error) {
+      console.error("Screen share error:", error);
+      toast({
+        variant: "destructive",
+        title: "Screen Share Failed",
+        description: "Could not start screen sharing. Please ensure you have granted permissions.",
+      });
+    }
+  }, [isScreenSharing, startScreenShare, stopScreenShare, toast]);
+
 
   useEffect(() => {
     if (localStream && localVideoRef.current) {
       localVideoRef.current.srcObject = localStream;
     }
   }, [localStream]);
+  
+  const isLocalVideoOff = isScreenSharing ? false : !isCameraOn;
 
   return (
     <div className="flex flex-col h-full">
@@ -119,14 +140,14 @@ export default function ContactBook() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-grow">
             {/* Local Video */}
             <div className="relative bg-muted/20 rounded-lg overflow-hidden flex items-center justify-center">
-              <video ref={localVideoRef} className={cn("w-full h-full object-cover", !isCameraOn && "invisible")} autoPlay muted playsInline />
-              {!isCameraOn && (
+              <video ref={localVideoRef} className={cn("w-full h-full object-cover", isLocalVideoOff && "invisible")} autoPlay muted playsInline />
+              {isLocalVideoOff && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-black">
                       <VideoOff className="h-16 w-16 text-muted-foreground" />
                       <p className="mt-4 text-lg">Camera is off</p>
                   </div>
               )}
-              <p className="absolute bottom-2 left-2 text-sm bg-black/50 px-2 py-1 rounded z-10">You</p>
+              <p className="absolute bottom-2 left-2 text-sm bg-black/50 px-2 py-1 rounded z-10">{isScreenSharing ? "Your Screen" : "You"}</p>
             </div>
             {/* Remote Videos */}
             {Object.entries(remoteStreams).map(([peerId, stream]) => (
@@ -178,12 +199,30 @@ export default function ContactBook() {
                                 className="rounded-full w-14 h-14"
                                 onClick={handleToggleCamera}
                                 aria-label={isCameraOn ? 'Turn off camera' : 'Turn on camera'}
+                                disabled={isScreenSharing}
                             >
                                 {isCameraOn ? <Video className="h-6 w-6" /> : <VideoOff className="h-6 w-6" />}
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                            <p>{isCameraOn ? 'Turn off camera' : 'Turn on camera'}</p>
+                             <p>{isScreenSharing ? "Can't use camera while sharing" : (isCameraOn ? 'Turn off camera' : 'Turn on camera')}</p>
+                        </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant={isScreenSharing ? 'destructive' : 'secondary'}
+                                size="icon"
+                                className="rounded-full w-14 h-14"
+                                onClick={handleToggleScreenShare}
+                                aria-label={isScreenSharing ? 'Stop sharing screen' : 'Share screen'}
+                            >
+                                <ScreenShare className="h-6 w-6" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{isScreenSharing ? 'Stop sharing screen' : 'Share screen'}</p>
                         </TooltipContent>
                     </Tooltip>
 

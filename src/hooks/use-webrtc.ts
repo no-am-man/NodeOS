@@ -15,26 +15,96 @@ const userId = Math.random().toString(36).substring(2, 9);
 export const useWebRTC = (roomId: string) => {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStreams, setRemoteStreams] = useState<Record<string, MediaStream>>({});
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+
   const peerConnections = useRef<Record<string, RTCPeerConnection>>({});
   const roomRef = useRef(ref(database, `webrtc-rooms/${roomId}`));
   const userRef = useRef(ref(database, `webrtc-rooms/${roomId}/${userId}`));
+  const localVideoTrack = useRef<MediaStreamTrack | null>(null);
+  const screenShareStream = useRef<MediaStream | null>(null);
 
   const cleanup = useCallback(() => {
+    // Stop local camera/mic stream
     if (localStream) {
       localStream.getTracks().forEach(track => track.stop());
     }
+    // Stop screen share stream
+    if (screenShareStream.current) {
+        screenShareStream.current.getTracks().forEach(track => track.stop());
+    }
+
     Object.values(peerConnections.current).forEach(pc => pc.close());
     peerConnections.current = {};
     setLocalStream(null);
     setRemoteStreams({});
+    setIsScreenSharing(false);
+    localVideoTrack.current = null;
+    screenShareStream.current = null;
+
     if (userRef.current) {
-        remove(userRef.current);
+      remove(userRef.current);
     }
     off(roomRef.current);
   }, [localStream]);
+
+  const stopScreenShare = useCallback(async () => {
+    if (!isScreenSharing || !localVideoTrack.current || !localStream) return;
+    
+    // Stop the screen sharing stream
+    screenShareStream.current?.getTracks().forEach(track => track.stop());
+    screenShareStream.current = null;
+
+    // Replace track for all peers
+    for (const pc of Object.values(peerConnections.current)) {
+        const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+        if (sender) {
+            await sender.replaceTrack(localVideoTrack.current);
+        }
+    }
+
+    // Restore local video to show camera
+    const newStream = new MediaStream([localVideoTrack.current, ...localStream.getAudioTracks()]);
+    setLocalStream(newStream);
+    setIsScreenSharing(false);
+  }, [isScreenSharing, localStream]);
+
+
+  const startScreenShare = useCallback(async () => {
+    if (!localStream) return;
+
+    const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+    const screenTrack = screenStream.getVideoTracks()[0];
+    
+    // Store original camera track if not already stored
+    if (!localVideoTrack.current) {
+        localVideoTrack.current = localStream.getVideoTracks()[0];
+    }
+
+    // Replace track for all peers
+    for (const pc of Object.values(peerConnections.current)) {
+        const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+        if (sender) {
+            await sender.replaceTrack(screenTrack);
+        }
+    }
+
+    // Update local video to show screen share
+    const newStream = new MediaStream([screenTrack, ...localStream.getAudioTracks()]);
+    setLocalStream(newStream);
+
+    screenShareStream.current = screenStream;
+    setIsScreenSharing(true);
+    
+    // Listen for when user stops sharing via browser UI
+    screenTrack.onended = () => {
+        stopScreenShare();
+    };
+
+  }, [localStream, stopScreenShare]);
   
   const joinRoom = useCallback(async (stream: MediaStream) => {
     setLocalStream(stream);
+    localVideoTrack.current = stream.getVideoTracks()[0];
     
     // Set up cleanup on disconnect
     onDisconnect(userRef.current).remove();
@@ -95,12 +165,13 @@ export const useWebRTC = (roomId: string) => {
             }
             if (data[otherUserId].iceCandidates) {
                 Object.values(data[otherUserId].iceCandidates).forEach((candidate: any) => {
-                    peerConnections.current[otherUserId]?.addIceCandidate(new RTCIceCandidate(candidate));
+                    peerConnections.current[otherUserId]?.addIceCandidate(new RTCIceCandidate(candidate)).catch(e => console.error("Error adding ICE candidate", e));
                 });
             }
         });
     });
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId]);
 
 
@@ -134,5 +205,5 @@ export const useWebRTC = (roomId: string) => {
     };
   }, [cleanup]);
 
-  return { localStream, remoteStreams, joinRoom, leaveRoom };
+  return { localStream, remoteStreams, joinRoom, leaveRoom, isScreenSharing, startScreenShare, stopScreenShare };
 };
