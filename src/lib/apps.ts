@@ -1,5 +1,5 @@
 import React, { type ComponentType } from 'react';
-import { Bot, Brush, Calculator, Gamepad2, Settings, Smile, Terminal } from 'lucide-react';
+import { Bot, Brush, Calculator, Clapperboard, Gamepad2, Settings, Smile, Terminal } from 'lucide-react';
 
 import dynamic from 'next/dynamic';
 
@@ -82,6 +82,13 @@ export const APPS: App[] = [
     Icon: Gamepad2,
     Component: createWebApp('https://play2048.co/'),
     defaultSize: { width: 360, height: 540 },
+  },
+  {
+    id: 'photo-editor',
+    name: 'Photo Editor',
+    Icon: Clapperboard,
+    Component: createWebApp('https://www.photopea.com/'),
+    defaultSize: { width: 1024, height: 768 },
   },
 ];
 
