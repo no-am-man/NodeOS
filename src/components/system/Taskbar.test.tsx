@@ -80,17 +80,38 @@ describe('Taskbar Component (UI Test)', () => {
     expect(welcomeButton.querySelector('div.w-1\\.5.h-1\\.5')).toBeInTheDocument();
   });
 
-  it('should dispatch FOCUS_WINDOW when a taskbar button is clicked', () => {
+  it('should dispatch FOCUS_WINDOW when an inactive window taskbar button is clicked', () => {
     const windows: WindowState[] = [
-        { id: 'win1', appId: 'welcome', title: 'Welcome', position: {x:100,y:100}, size: welcomeApp.defaultSize, isMinimized: false, isMaximized: false, zIndex: 100 },
+      { id: 'win1', appId: 'welcome', title: 'Welcome', position: {x:100,y:100}, size: welcomeApp.defaultSize, isMinimized: false, isMaximized: false, zIndex: 100 },
+      { id: 'win2', appId: 'settings', title: 'Settings', position: {x:150,y:150}, size: settingsApp.defaultSize, isMinimized: false, isMaximized: false, zIndex: 101 },
     ];
-    const state: OsState = { windows, activeWindowId: null, nextZIndex: 101 };
+    // 'win2' is the active window
+    const state: OsState = { windows, activeWindowId: 'win2', nextZIndex: 102 };
     renderWithContext(state);
     
+    // Get the button for the inactive window ('Welcome')
     const welcomeButton = screen.getByRole('button', { name: /Welcome/i });
     fireEvent.click(welcomeButton);
     
+    // Expect it to call FOCUS_WINDOW because it was inactive
     expect(mockDispatch).toHaveBeenCalledWith({ type: 'FOCUS_WINDOW', payload: { id: 'win1' } });
+  });
+
+  it('should dispatch MINIMIZE_WINDOW when the active window taskbar button is clicked', () => {
+    const windows: WindowState[] = [
+      { id: 'win1', appId: 'welcome', title: 'Welcome', position: {x:100,y:100}, size: welcomeApp.defaultSize, isMinimized: false, isMaximized: false, zIndex: 100 },
+      { id: 'win2', appId: 'settings', title: 'Settings', position: {x:150,y:150}, size: settingsApp.defaultSize, isMinimized: false, isMaximized: false, zIndex: 101 },
+    ];
+    // 'win2' is the active window
+    const state: OsState = { windows, activeWindowId: 'win2', nextZIndex: 102 };
+    renderWithContext(state);
+    
+    // Get the button for the active window ('Settings')
+    const settingsButton = screen.getByRole('button', { name: /Settings/i });
+    fireEvent.click(settingsButton);
+    
+    // Expect it to call MINIMIZE_WINDOW because it was already active
+    expect(mockDispatch).toHaveBeenCalledWith({ type: 'MINIMIZE_WINDOW', payload: { id: 'win2' } });
   });
 
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from 'react';
-import { useOs } from '@/contexts/OsContext';
+import { useOs, type WindowState } from '@/contexts/OsContext';
 import AppLauncher from './AppLauncher';
 import { findApp } from '@/lib/apps';
 import { Button } from '../ui/button';
@@ -33,6 +33,16 @@ export default function Taskbar() {
   const { state, dispatch } = useOs();
   const { theme, setTheme } = useTheme();
 
+  const handleTaskbarButtonClick = (win: WindowState) => {
+    // If the window is already active and not minimized, minimize it.
+    if (win.id === state.activeWindowId && !win.isMinimized) {
+        dispatch({ type: 'MINIMIZE_WINDOW', payload: { id: win.id } });
+    } else {
+        // Otherwise, focus it (which also un-minimizes it).
+        dispatch({ type: 'FOCUS_WINDOW', payload: { id: win.id } });
+    }
+  };
+
   return (
     <div className="h-10 bg-secondary/80 backdrop-blur-md border-t border-primary/10 w-full flex items-center justify-between px-2 z-[99999] shadow-inner">
       <div className="flex items-center gap-2">
@@ -51,7 +61,7 @@ export default function Taskbar() {
                             "h-8 px-2 flex items-center gap-2",
                             isActive ? "bg-accent/50" : ""
                         )}
-                        onClick={() => dispatch({type: 'FOCUS_WINDOW', payload: {id: win.id}})}
+                        onClick={() => handleTaskbarButtonClick(win)}
                     >
                         <app.Icon className="w-5 h-5" />
                         <span className={cn("text-sm", { "font-semibold": isActive })}>{app.name}</span>
