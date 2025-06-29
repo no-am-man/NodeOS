@@ -34,12 +34,14 @@ describe('AIAssistant Component (UI Test)', () => {
     expect(await screen.findByText('Hello AI!')).toBeInTheDocument();
     expect(input).toHaveValue('');
     expect(sendButton).toBeDisabled();
+    expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
     
     // Wait for the AI response to appear
     const aiResponse = await screen.findByText('This is a test response.');
     expect(aiResponse).toBeInTheDocument();
 
-    // Check that the send button is enabled again
+    // Check that loading indicator is gone and button is enabled
+    expect(screen.queryByTestId('loading-indicator')).not.toBeInTheDocument();
     expect(sendButton).not.toBeDisabled();
   });
 
@@ -54,9 +56,15 @@ describe('AIAssistant Component (UI Test)', () => {
     fireEvent.change(input, { target: { value: 'Trigger error' } });
     fireEvent.click(sendButton);
 
+    // Check that the loading indicator is visible
+    expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
+
     // Wait for the error message to appear
     const errorMessage = await screen.findByText("Sorry, I encountered an error. Please try again.");
     expect(errorMessage).toBeInTheDocument();
+    
+    // Check that loading indicator is gone and button is enabled
+    expect(screen.queryByTestId('loading-indicator')).not.toBeInTheDocument();
     expect(sendButton).not.toBeDisabled();
   });
 });
