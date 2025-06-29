@@ -101,4 +101,49 @@ describe('Window Component (UI Test)', () => {
       payload: { id: windowState.id },
     });
   });
+
+  it('should update position on drag', () => {
+    const windowState = getInitialWindowState();
+    renderWindow(windowState);
+    
+    const header = screen.getByText('Test Window').parentElement!;
+    
+    // Start drag
+    fireEvent.mouseDown(header, { clientX: 110, clientY: 110 });
+    
+    // Drag
+    fireEvent.mouseMove(window, { clientX: 160, clientY: 180 });
+
+    // End drag
+    fireEvent.mouseUp(window);
+
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: 'UPDATE_WINDOW_POSITION',
+      payload: { id: windowState.id, position: { x: 150, y: 170 } },
+    });
+  });
+
+  it('should update size on resize', () => {
+    const windowState = getInitialWindowState();
+    const { container } = renderWindow(windowState);
+    
+    const resizeHandle = container.querySelector('.cursor-nwse-resize');
+    expect(resizeHandle).toBeInTheDocument();
+    
+    if (!resizeHandle) return;
+
+    // Start resize
+    fireEvent.mouseDown(resizeHandle, { clientX: 600, clientY: 500 }); // initial size is 500x400, pos 100,100, so bottom right is at 600,500
+    
+    // Resize
+    fireEvent.mouseMove(window, { clientX: 650, clientY: 520 });
+
+    // End resize
+    fireEvent.mouseUp(window);
+
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: 'UPDATE_WINDOW_SIZE',
+      payload: { id: windowState.id, size: { width: 550, height: 420 } },
+    });
+  });
 });
