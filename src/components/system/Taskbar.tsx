@@ -9,12 +9,17 @@ import { cn } from '@/lib/utils';
 import { useTheme } from 'next-themes';
 
 function Clock() {
-    const [time, setTime] = React.useState(new Date());
+    const [time, setTime] = React.useState<Date | null>(null);
 
     React.useEffect(() => {
+        setTime(new Date());
         const timerId = setInterval(() => setTime(new Date()), 1000);
         return () => clearInterval(timerId);
     }, []);
+
+    if (!time) {
+        return null; // Render nothing on the server and initial client render to prevent hydration mismatch
+    }
 
     return (
         <div className="text-sm px-3 text-right">
