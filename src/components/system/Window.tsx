@@ -12,14 +12,25 @@ interface WindowProps {
   children: ReactNode;
 }
 
+const resizeHandles = [
+  { direction: 'top', className: 'cursor-ns-resize top-0 h-2 inset-x-4' },
+  { direction: 'bottom', className: 'cursor-ns-resize bottom-0 h-2 inset-x-4' },
+  { direction: 'left', className: 'cursor-ew-resize left-0 w-2 inset-y-4' },
+  { direction: 'right', className: 'cursor-ew-resize right-0 w-2 inset-y-4' },
+  { direction: 'top-left', className: 'cursor-nwse-resize top-0 left-0 w-4 h-4' },
+  { direction: 'top-right', className: 'cursor-nesw-resize top-0 right-0 w-4 h-4' },
+  { direction: 'bottom-left', className: 'cursor-nesw-resize bottom-0 left-0 w-4 h-4' },
+  { direction: 'bottom-right', className: 'cursor-nwse-resize bottom-0 right-0 w-4 h-4' },
+];
+
 export default function Window({ win, children }: WindowProps) {
   const { dispatch } = useOs();
   const App = findApp(win.appId);
   const headerRef = useRef<HTMLDivElement>(null);
-  const resizeRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
-  const isResizing = useRef(false);
+  const activeResizeHandle = useRef<string | null>(null);
   const dragStartPos = useRef({ x: 0, y: 0 });
+  const initialWindowRect = useRef({ x: 0, y: 0, width: 0, height: 0 });
 
   const [position, setPosition] = useState(win.position);
   const [size, setSize] = useState(win.size);
@@ -52,11 +63,10 @@ export default function Window({ win, children }: WindowProps) {
     dispatch({ type: 'FOCUS_WINDOW', payload: { id: win.id } });
     if(win.isMaximized) return;
 
-    isResizing.current = true;
-    dragStartPos.current = {
-        x: e.clientX,
-        y: e.clientY,
-    };
+    activeResizeHandle.current = e.currentTarget.dataset.direction || null;
+    dragStartPos.current = { x: e.clientX, y: e.clientY, };
+    initialWindowRect.current = { x: position.x, y: position.y, width: size.width, height: size.height };
+
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
   };
@@ -67,11 +77,44 @@ export default function Window({ win, children }: WindowProps) {
         const newY = e.clientY - dragStartPos.current.y;
         setPosition({ x: newX, y: newY });
     }
-    if (isResizing.current) {
-        const newWidth = size.width + (e.clientX - dragStartPos.current.x);
-        const newHeight = size.height + (e.clientY - dragStartPos.current.y);
-        dragStartPos.current = { x: e.clientX, y: e.clientY };
-        setSize({ width: Math.max(200, newWidth), height: Math.max(150, newHeight) });
+    if (activeResizeHandle.current) {
+        const dx = e.clientX - dragStartPos.current.x;
+        const dy = e.clientY - dragStartPos.current.y;
+
+        const newPosition = { ...initialWindowRect.current };
+        const newSize = { ...initialWindowRect.current };
+        
+        const directions = activeResizeHandle.current.split('-');
+
+        if (directions.includes('top')) {
+            const newHeight = initialWindowRect.current.height - dy;
+            if (newHeight >= 150) {
+                newPosition.y = initialWindowRect.current.y + dy;
+                newSize.height = newHeight;
+            } else {
+                newPosition.y = initialWindowRect.current.y + initialWindowRect.current.height - 150;
+                newSize.height = 150;
+            }
+        }
+        if (directions.includes('bottom')) {
+            newSize.height = Math.max(150, initialWindowRect.current.height + dy);
+        }
+        if (directions.includes('left')) {
+            const newWidth = initialWindowRect.current.width - dx;
+            if (newWidth >= 200) {
+                newPosition.x = initialWindowRect.current.x + dx;
+                newSize.width = newWidth;
+            } else {
+                newPosition.x = initialWindowRect.current.x + initialWindowRect.current.width - 200;
+                newSize.width = 200;
+            }
+        }
+        if (directions.includes('right')) {
+            newSize.width = Math.max(200, initialWindowRect.current.width + dx);
+        }
+
+        setPosition({ x: newPosition.x, y: newPosition.y });
+        setSize({ width: newSize.width, height: newSize.height });
     }
   };
 
@@ -79,11 +122,11 @@ export default function Window({ win, children }: WindowProps) {
     if (isDragging.current) {
         dispatch({ type: 'UPDATE_WINDOW_POSITION', payload: { id: win.id, position } });
     }
-    if (isResizing.current) {
-        dispatch({ type: 'UPDATE_WINDOW_SIZE', payload: { id: win.id, size } });
+    if (activeResizeHandle.current) {
+        dispatch({ type: 'UPDATE_WINDOW_GEOMETRY', payload: { id: win.id, position, size } });
     }
     isDragging.current = false;
-    isResizing.current = false;
+    activeResizeHandle.current = null;
     window.removeEventListener('mousemove', handleMouseMove);
     window.removeEventListener('mouseup', handleMouseUp);
   };
@@ -129,11 +172,16 @@ export default function Window({ win, children }: WindowProps) {
         {children}
       </main>
       {!win.isMaximized && (
-        <div
-            ref={resizeRef}
-            className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize"
-            onMouseDown={handleResizeMouseDown}
-        />
+        <>
+          {resizeHandles.map(({ direction, className }) => (
+            <div
+              key={direction}
+              data-direction={direction}
+              className={cn("absolute", className)}
+              onMouseDown={handleResizeMouseDown}
+            />
+          ))}
+        </>
       )}
     </div>
   );

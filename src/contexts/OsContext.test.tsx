@@ -134,15 +134,17 @@ describe('OS Reducer (State Logic Test)', () => {
         expect(updatedWindow?.position).toEqual(newPosition);
     });
     
-    it('should handle UPDATE_WINDOW_SIZE', () => {
+    it('should handle UPDATE_WINDOW_GEOMETRY', () => {
         let state = osReducer(initialState, { type: 'LAUNCH_APP', payload: welcomeApp });
         const windowId = state.windows[0].id;
-        const newSize = { width: 800, height: 600 };
+        const newPosition = { x: 50, y: 50 };
+        const newSize = { width: 100, height: 100 };
 
-        const updateAction: Action = { type: 'UPDATE_WINDOW_SIZE', payload: { id: windowId, size: newSize } };
+        const updateAction: Action = { type: 'UPDATE_WINDOW_GEOMETRY', payload: { id: windowId, position: newPosition, size: newSize } };
         const updatedState = osReducer(state, updateAction);
         const updatedWindow = updatedState.windows.find(win => win.id === windowId);
 
+        expect(updatedWindow?.position).toEqual(newPosition);
         expect(updatedWindow?.size).toEqual(newSize);
     });
     

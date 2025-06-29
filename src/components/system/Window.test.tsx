@@ -123,27 +123,46 @@ describe('Window Component (UI Test)', () => {
     });
   });
 
-  it('should update size on resize', () => {
+  it('should update size and position on resize', () => {
     const windowState = getInitialWindowState();
     const { container } = renderWindow(windowState);
     
-    const resizeHandle = container.querySelector('.cursor-nwse-resize');
-    expect(resizeHandle).toBeInTheDocument();
-    
-    if (!resizeHandle) return;
+    // Test resize from bottom-right
+    const bottomRightHandle = container.querySelector('[data-direction="bottom-right"]');
+    expect(bottomRightHandle).toBeInTheDocument();
+    if (!bottomRightHandle) return;
 
-    // Start resize
-    fireEvent.mouseDown(resizeHandle, { clientX: 600, clientY: 500 }); // initial size is 500x400, pos 100,100, so bottom right is at 600,500
-    
-    // Resize
-    fireEvent.mouseMove(window, { clientX: 650, clientY: 520 });
-
-    // End resize
+    fireEvent.mouseDown(bottomRightHandle, { clientX: 600, clientY: 500 }); // initial size is 500x400, pos 100,100 -> bottom right is at 600,500
+    fireEvent.mouseMove(window, { clientX: 650, clientY: 520 }); // Drag right 50, down 20
     fireEvent.mouseUp(window);
 
     expect(mockDispatch).toHaveBeenCalledWith({
-      type: 'UPDATE_WINDOW_SIZE',
-      payload: { id: windowState.id, size: { width: 550, height: 420 } },
+      type: 'UPDATE_WINDOW_GEOMETRY',
+      payload: { 
+        id: windowState.id,
+        position: { x: 100, y: 100 }, // Position shouldn't change
+        size: { width: 550, height: 420 }
+      },
     });
+
+    vi.clearAllMocks(); // Clear mocks for next test part
+
+    // Test resize from top-left
+    const topLeftHandle = container.querySelector('[data-direction="top-left"]');
+    expect(topLeftHandle).toBeInTheDocument();
+    if (!topLeftHandle) return;
+
+    fireEvent.mouseDown(topLeftHandle, { clientX: 100, clientY: 100 }); // Top-left corner
+    fireEvent.mouseMove(window, { clientX: 80, clientY: 70 }); // Drag left 20, up 30
+    fireEvent.mouseUp(window);
+
+    expect(mockDispatch).toHaveBeenCalledWith({
+        type: 'UPDATE_WINDOW_GEOMETRY',
+        payload: { 
+          id: windowState.id,
+          position: { x: 80, y: 70 },
+          size: { width: 520, height: 430 }
+        },
+      });
   });
 });

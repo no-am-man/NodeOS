@@ -32,7 +32,7 @@ export type Action =
   | { type: 'MINIMIZE_WINDOW'; payload: { id: string } }
   | { type: 'TOGGLE_MAXIMIZE_WINDOW'; payload: { id: string } }
   | { type: 'UPDATE_WINDOW_POSITION'; payload: { id: string; position: { x: number; y: number } } }
-  | { type: 'UPDATE_WINDOW_SIZE'; payload: { id: string; size: { width: number; height: number } } }
+  | { type: 'UPDATE_WINDOW_GEOMETRY'; payload: { id: string; position: { x: number; y: number }, size: { width: number; height: number } } }
   | { type: 'HYDRATE_WINDOWS'; payload: { windows: WindowState[] } };
 
 export const initialState: OsState = {
@@ -143,13 +143,15 @@ export const osReducer = (state: OsState, action: Action): OsState => {
           win.id === action.payload.id ? { ...win, position: action.payload.position } : win
         ),
       };
-    case 'UPDATE_WINDOW_SIZE':
+    case 'UPDATE_WINDOW_GEOMETRY':
         return {
             ...state,
             windows: state.windows.map(win =>
-              win.id === action.payload.id ? { ...win, size: action.payload.size } : win
+                win.id === action.payload.id 
+                ? { ...win, position: action.payload.position, size: action.payload.size } 
+                : win
             ),
-          };
+        };
     default:
       return state;
   }
