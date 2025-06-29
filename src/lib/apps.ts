@@ -1,11 +1,12 @@
 import { type ComponentType } from 'react';
-import { Bot, Settings, Smile } from 'lucide-react';
+import { Bot, Calculator, Settings, Smile } from 'lucide-react';
 
 import dynamic from 'next/dynamic';
 
 const AIAssistant = dynamic(() => import('@/components/apps/AIAssistant'));
 const SettingsApp = dynamic(() => import('@/components/apps/Settings'));
 const Welcome = dynamic(() => import('@/components/apps/Welcome'));
+const CalculatorApp = dynamic(() => import('@/components/apps/Calculator'));
 
 export interface App {
   id: string;
@@ -38,6 +39,13 @@ export const APPS: App[] = [
     Icon: Settings,
     Component: SettingsApp,
     defaultSize: { width: 400, height: 450 },
+  },
+  {
+    id: 'calculator',
+    name: 'Calculator',
+    Icon: Calculator,
+    Component: CalculatorApp,
+    defaultSize: { width: 300, height: 450 },
   },
 ];
 
