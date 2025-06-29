@@ -1,5 +1,5 @@
 import React, { type ComponentType } from 'react';
-import { Bot, Calculator, Globe, Settings, Smile, Terminal } from 'lucide-react';
+import { Bot, Brush, Calculator, Settings, Smile, Terminal } from 'lucide-react';
 
 import dynamic from 'next/dynamic';
 
@@ -70,10 +70,10 @@ export const APPS: App[] = [
     defaultSize: { width: 640, height: 380 },
   },
   {
-    id: 'canva',
-    name: 'Canva',
-    Icon: Globe,
-    Component: createWebApp('https://www.canva.com/'),
+    id: 'whiteboard',
+    name: 'Whiteboard',
+    Icon: Brush,
+    Component: createWebApp('https://www.tldraw.com/'),
     defaultSize: { width: 1024, height: 768 },
   },
 ];
