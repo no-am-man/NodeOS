@@ -35,6 +35,13 @@ export default function Calculator() {
   };
 
   const performOperation = (nextOperator: string) => {
+    // If we are waiting for an operand, it means an operator was just pressed.
+    // If another operator is pressed, just change the operator.
+    if (waitingForOperand) {
+        setOperator(nextOperator);
+        return;
+    }
+
     const inputValue = parseFloat(display);
 
     if (currentValue === null) {

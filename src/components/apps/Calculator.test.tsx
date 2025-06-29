@@ -134,4 +134,15 @@ describe('Calculator Component (UI Test)', () => {
     const display = screen.getByTestId('calculator-display');
     expect(display).toHaveTextContent('5.2');
   });
+
+  it('should allow changing the operator', () => {
+    render(<Calculator />);
+    fireEvent.click(screen.getByText('5'));
+    fireEvent.click(screen.getByText('+'));
+    fireEvent.click(screen.getByText('-')); // Change operator
+    fireEvent.click(screen.getByText('2'));
+    fireEvent.click(screen.getByText('='));
+    const display = screen.getByTestId('calculator-display');
+    expect(display).toHaveTextContent('3'); // 5 - 2 = 3
+  });
 });
