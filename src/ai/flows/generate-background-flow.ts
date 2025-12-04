@@ -26,7 +26,7 @@ const generateBackgroundFlow = ai.defineFlow(
   },
   async (input) => {
     const {media} = await ai.generate({
-      model: 'gemini-1.5-flash-latest',
+      model: 'googleai/gemini-1.5-flash-latest',
       prompt: 'A beautiful, abstract, high-resolution desktop wallpaper. Minimalist and modern, suitable for a computer background.',
       config: {
         responseModalities: ['IMAGE'],
