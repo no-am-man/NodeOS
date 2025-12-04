@@ -25,9 +25,8 @@ const generateBackgroundFlow = ai.defineFlow(
     outputSchema: GenerateBackgroundOutputSchema,
   },
   async (input) => {
-    // By not specifying a model, we use the default model configured in genkit.ts
-    // This is more robust against model deprecation issues.
     const {media} = await ai.generate({
+      model: 'googleai/gemini-1.5-flash-latest',
       prompt: 'A beautiful, abstract, high-resolution desktop wallpaper. Minimalist and modern, suitable for a computer background.',
       config: {
         responseModalities: ['IMAGE'],
