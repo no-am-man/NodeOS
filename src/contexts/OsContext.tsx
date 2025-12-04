@@ -43,7 +43,7 @@ export const initialState: OsState = {
   windows: [],
   activeWindowId: null,
   nextZIndex: 100,
-  desktopBackgroundUrl: 'https://placehold.co/1920x1080.png',
+  desktopBackgroundUrl: 'https://storage.googleapis.com/stedi-assets/misc/webframe-os-bg.png',
 };
 
 export const osReducer = (state: OsState, action: Action): OsState => {
