@@ -31,7 +31,7 @@ describe('Generate Background Flow', () => {
 
         expect(mockGenerate).toHaveBeenCalledOnce();
         expect(mockGenerate).toHaveBeenCalledWith(expect.objectContaining({
-            model: 'googleai/gemini-2.0-flash-preview-image-generation',
+            model: 'googleai/gemini-1.5-flash-latest',
             prompt: 'A beautiful, abstract, high-resolution desktop wallpaper. Minimalist and modern, suitable for a computer background.',
         }));
         expect(result).toEqual({ imageDataUri: mockImageDataUri });
