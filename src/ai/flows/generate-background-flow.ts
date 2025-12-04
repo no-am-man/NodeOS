@@ -29,6 +29,9 @@ const generateBackgroundFlow = ai.defineFlow(
     // This is more robust against model deprecation issues.
     const {media} = await ai.generate({
       prompt: 'A beautiful, abstract, high-resolution desktop wallpaper. Minimalist and modern, suitable for a computer background.',
+      config: {
+        responseModalities: ['IMAGE'],
+      },
     });
 
     if (!media || !media.url) {
